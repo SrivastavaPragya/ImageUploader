@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const SECRET = "SECr3mm";
-
+const {User, Image}=require('../db/models/Schema')
 
 const authenticateJwt = (req, res, next) => {
 
@@ -14,12 +14,16 @@ const authenticateJwt = (req, res, next) => {
         res.json({message:"token not defined"});
     }
 
-    jwt.verify(token, SECRET, (err, user) => {
+    jwt.verify(token, SECRET,async (err, data) => {
       if (err) {
         return res.sendStatus(403);
       }
-      req.userId = user._id;
-      next();
+      const user= await User.findOne({username:data.username})
+      if(!user){
+        res.json({message:"User not found"})
+      }
+      req.headers["userId"]=user._id
+      next()
     });
   } else {
     res.sendStatus(401).json({message:"Authentication failed"});

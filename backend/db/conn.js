@@ -1,6 +1,7 @@
-const mongoose=require("mongoose")
-mongoose.connect("mongodb://127.0.0.1:27017/ImageUPloader").then(()=>{
-    console.log("connection is succesful")
- }).catch((e)=>{
-console.log(e)
- })
+const mongoose = require("mongoose");
+
+mongoose.connect("mongodb+srv://admin:admin@cluster0.0fjyio3.mongodb.net/ImageLoader").then(() => {
+    console.log("Connection is successful");
+}).catch((e) => {
+    console.log(e);
+});

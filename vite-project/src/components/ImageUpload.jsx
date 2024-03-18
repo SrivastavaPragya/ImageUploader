@@ -1,115 +1,122 @@
-import React, { useState } from 'react';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import React, { useState } from "react";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import { useNavigate } from "react-router-dom";
+import { BASE_URL } from "../config";
 
 const ImageUpload = () => {
-  const [title, setTitle] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null); 
+
+
+  const navigate = useNavigate(); 
+  const [details, setDetails] = useState({
+    title: "",
+    image: null, // This will hold the base64 encoded image.
+  });
+
 
   const handleFileInputClick = () => {
     document.getElementById('fileInput').click();
   };
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
-      setSelectedFile(file);
-
-      // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewUrl(reader.result);
+        // Set the base64 string, including the data URL prefix.
+        setDetails({ ...details, image: reader.result });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleTitleChange = (event) => {
-    setTitle(event.target.value);
+  const handleTitleChange = (e) => {
+    setDetails({ ...details, title: e.target.value });
   };
 
-  const handleUpload = async () => {
-    if (title && selectedFile) {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('image', selectedFile);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-      try {
-        // Assuming your endpoint for file upload is '/upload'
-        const response = await fetch('http://localhost:8000/upload', {
-          method: 'POST',
-          body: formData, // FormData will set the Content-Type to 'multipart/form-data' automatically
-        });
+    // Since you're sending JSON, you can include the base64 string directly.
+    const payload = JSON.stringify({
+      title: details.title,
+      image: details.image,
+    });
 
-        if (response.ok) {
-          console.log('Image uploaded successfully!');
-          setTitle('');
-          setSelectedFile(null);
-          setPreviewUrl(null); // Reset preview
-        } else {
-          console.error('Failed to upload image.');
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
+    try {
+      const response = await fetch(`${BASE_URL}/user/upload-image`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          
+          "authorization": `Bearer ${localStorage.getItem("token")}`, 
+        },
+        body: payload,
+      });
+
+      if (response.ok) {
+        console.log("Image uploaded successfully!");
+        setDetails({ title: "", image: null });
+        navigate("/GetImages"); 
+      } else {
+        console.error("Failed to upload image.");
       }
-    } else {
-      alert('Please enter a title and select an image');
+    } catch (error) {
+      console.error("Error uploading image:", error);
     }
   };
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: 'calc(100vh - 64px)',
-        background: '#fff',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "calc(100vh - 64px)",
+        background: "#fff",
         p: 4,
       }}
     >
       <Box
         sx={{
-          width: '60%',
-          height: '300px',
-          border: '2px dashed #ccc',
-          borderRadius: '8px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'column',
-          cursor: 'pointer',
-          '&:hover': {
-            borderColor: 'primary.main',
+          width: "60%",
+          height: "300px",
+          border: "2px dashed #ccc",
+          borderRadius: "8px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          cursor: "pointer",
+          "&:hover": {
+            borderColor: "primary.main",
           },
         }}
-        onClick={handleFileInputClick} 
       >
         <input
           type="text"
           placeholder="Title"
-          value={title}
+          value={ details.title}
           onChange={handleTitleChange}
-          style={{ marginTop: '20px', width: '60%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+          style={{
+            marginTop: "20px",
+            width: "60%",
+            padding: "10px",
+            borderRadius: "4px",
+            border: "1px solid #ccc",
+          }}
         />
-        
-        {previewUrl && (
-          <img src={previewUrl} alt="Preview" style={{ marginTop: '20px', maxWidth: '100%', height: 'auto' }} />
-        )}
 
         <Typography variant="body1" color="textSecondary">
           Drop your image here or
-          <Button color="primary">
-            browse
-          </Button>
+          <Button color="primary" onClick={handleFileInputClick}>browse</Button>
         </Typography>
         <input
           type="file"
           id="fileInput"
-          style={{ display: 'none' }}
+          style={{ display: "none" }}
           onChange={handleFileChange}
           accept="image/*"
         />
@@ -118,8 +125,8 @@ const ImageUpload = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={handleUpload}
-        sx={{ mt: 2, width: '200px', height: '50px', fontSize: '16px' }}
+        onClick={handleSubmit}
+        sx={{ mt: 2, width: "200px", height: "50px", fontSize: "16px" }}
       >
         Upload
       </Button>

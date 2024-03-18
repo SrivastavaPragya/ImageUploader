@@ -50,35 +50,60 @@ router.get("/all",authenticateJwt,async(req, res)=>{
 })
 
 
-//get filtered images --> get all user's filter image --> localhost:3000//user/images?filter=om
-router.get("/images",authenticateJwt,async(req,res)=>{
+router.get("/images", authenticateJwt, async (req, res) => {
+  try {
+    const filter = req.query.filter || "";
 
-})
+    // Find images with titles that match the filter query parameter, case-insensitive
+    const images = await Image.find({
+      title: {
+        $regex: filter,
+        $options: "i", // i for case insensitive
+      },
+    }).populate('userId', 'username'); // Assuming you want to include the username of the user who posted the image
+
+    res.status(200).json({ images });
+  } catch (error) {
+    console.error("Error searching for images:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 
 //post images --> saves images n details
 router.post("/upload-image", authenticateJwt ,async (req, res) => {
     try {
       
-      const {userId} = req;
-      const {title, photo} = req.body;
+      const {userId} = req.headers;
+    
+      const {title, image} = req.body;
+
+      console.log(userId);
       //const imageURL = await cloudinary.uploader.upload(photo); //save to cloudinary return URL
-      const imageURL = await cloudinary.uploader.upload(photo, { use_filename: true, resource_type: "image" });
+      const imageURL = await cloudinary.uploader.upload(image, function (error, result) {
+        if (error) {
+          console.log(error);
+        }
+        console.log(result);
+      });
 
   
       //creating new post in database
-      const newPost = await Post.create({
+      const newImage= await Image.create({
         userId,
         title,
         imageURL: imageURL.url,
       });
   
-      res.status(200).json({ message:"Image uploaded succesfully",success: true, data: newPost });
+      res.status(200).json({ message:"Image uploaded succesfully",success: true, data: newImage });
 
     } catch (err) {
+
+      console.log(err);
       res.status(500).json({
+       
         success: false,
-        message: "Unable to create a post, please try again",
+        message: "Unable to create a Image, please try again",
       });
     }
   });

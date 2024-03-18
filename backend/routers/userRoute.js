@@ -45,8 +45,13 @@ router.post("/login", async (req, res) => {
 
 //get all images --> get all user's image
 router.get("/all",authenticateJwt,async(req, res)=>{
-  const Images= await Image.find();
-  res.status(200).json({message:"all the courses",Images})
+
+  const userId = req.headers.userId;
+  if(!userId){
+return res.status(404).json({message:"User not found"})
+  }
+  const Images= await Image.find({userId:userId});
+  res.status(200).json({message:"all the Images",Images})
 })
 
 

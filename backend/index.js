@@ -4,7 +4,7 @@ require("./db/conn");
 const cors=require('cors')
 const {User, Image}=require('./db/models/Schema')
 const userRoute=require('./routers/userRoute')
-const PORT=process.env.PORT||3000
+const PORT=process.env.PORT||8000
 
 
 
